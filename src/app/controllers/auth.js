@@ -31,7 +31,7 @@ module.exports = {
             let user = await User.findOne({ email });
             if(user) {
                 if( user.email === email )
-                    return response.status(400).send({ success: false, message: 'Email already exists', data: null });
+                    return response.status(400).json({ success: false, message: 'Email already exists', data: null });
                 
             }
     
@@ -40,16 +40,16 @@ module.exports = {
             user = await User.create({ ...request.body, confirmToken });
     
             // Envia email de boas vindas ao novo usuário
-            mailer.sendMail({
+            mailer.jsonMail({
                 to: email,
                 from: 'valdecir.junior@outlook.com',
                 template: 'auth/register',
                 context: { confirmToken },
             }, (err) => {
                 if (err)
-                    return response.status(500).send({ success: false, message: 'Cannot send forgot passwrod email', data: null });
+                    return response.status(500).json({ success: false, message: 'Cannot json forgot passwrod email', data: null });
                 
-                return response.status(200).send({ success: true, message: 'Service performed successfully', data: null });
+                return response.status(200).json({ success: true, message: 'Service performed successfully', data: null });
             });
     
             // Remove atributos do JSON de retorno
@@ -61,9 +61,9 @@ module.exports = {
     
             await registerAuthHistory({ token, user: user._id });
     
-            return response.status(201).send({ success: true, message: 'Service performed successfully', data: { user, token } });
+            return response.status(201).json({ success: true, message: 'Service performed successfully', data: { user, token } });
         } catch (err) {
-            return response.status(500).send({ success: false, message: 'Registration failed', data: null });
+            return response.status(500).json({ success: false, message: 'Registration failed', data: null });
         }
     },
 
@@ -73,15 +73,15 @@ module.exports = {
             const user = await User.findOne({ confirmToken: token });
             
             if(!user)
-                return response.status(400).send({ success: false, message: 'User not found or token invalid', data: null });
+                return response.status(400).json({ success: false, message: 'User not found or token invalid', data: null });
             
             user.confirmed = true;
             user.confirmToken = null;
             await user.save();
             
-            return response.status(200).send({ success: true, message: 'Service performed successfully', data: null });
+            return response.status(200).json({ success: true, message: 'Service performed successfully', data: null });
         } catch (err) {
-            return response.status(500).send({ success: false, message: 'Cannot reset password, try again', data: null });
+            return response.status(500).json({ success: false, message: 'Cannot reset password, try again', data: null });
         }
     },
 
@@ -91,10 +91,10 @@ module.exports = {
             const user = await User.findOne({ email }).select('+password');
     
             if (!user)
-                return response.status(400).send({ success: false, message: 'User not found', data: null });
+                return response.status(400).json({ success: false, message: 'User not found', data: null });
             
             if (!await bcrypt.compare( password, user.password))
-                return response.status(400).send({ success: false, message: 'Invalid password', data: null });
+                return response.status(400).json({ success: false, message: 'Invalid password', data: null });
     
             user.password = undefined;
             user.passwordResetExpires = undefined;
@@ -103,10 +103,10 @@ module.exports = {
             const token = generateToken({ id: user.id });
             await registerAuthHistory({ token, user: user.id });
     
-            return response.status(200).send({ success: true, message: 'Service performed successfully', data: { user, token } });
+            return response.status(200).json({ success: true, message: 'Service performed successfully', data: { user, token } });
         } catch (err) {
             console.log(err);
-            return response.status(500).send({ success: false, message: 'Authenticate failed', data: null });
+            return response.status(500).json({ success: false, message: 'Authenticate failed', data: null });
         }
     },
 
@@ -116,7 +116,7 @@ module.exports = {
             const user = await User.findOne({ email });
     
             if(!user)
-                return response.status(400).send({ success: false, message: 'User not found', data: null });
+                return response.status(400).json({ success: false, message: 'User not found', data: null });
             
             const token = crypto.randomBytes(20).toString('hex');
             const now = new Date();
@@ -126,19 +126,19 @@ module.exports = {
             user.passwordResetExpires = now;
             await user.save();
             
-            mailer.sendMail({
+            mailer.jsonMail({
                 to: email,
                 from: 'valdecir.junior@outlook.com',
                 template: 'auth/forgot_password',
                 context: { token },
             }, (err) => {
                 if (err)
-                    return response.status(500).send({ success: false, message: 'Cannot send forgot passwrod email', data: null });
+                    return response.status(500).json({ success: false, message: 'Cannot json forgot passwrod email', data: null });
                 
-                return response.status(200).send({ success: true, message: 'Service performed successfully', data: null });
+                return response.status(200).json({ success: true, message: 'Service performed successfully', data: null });
             });
         } catch (err) {
-            return response.status(500).send({ success: false, message: 'Error on forgot password, try again', data: null });
+            return response.status(500).json({ success: false, message: 'Error on forgot password, try again', data: null });
         }
     },
 
@@ -148,39 +148,39 @@ module.exports = {
             const user = await User.findOne({ email }).select('+passwordResetToken passwordResetExpires');
             
             if(!user)
-                return response.status(400).send({ success: false, message: 'User not found', data: null });
+                return response.status(400).json({ success: false, message: 'User not found', data: null });
             
             if(token !== user.passwordResetToken)
-                return response.status(401).send({ success: false, message: 'Token Invalid', data: null });
+                return response.status(401).json({ success: false, message: 'Token Invalid', data: null });
             
             const now = new Date();
             if(now > user.passwordResetExpires)
-                return response.status(401).send({ success: false, message: 'Token expired, generate a new one', data: null });
+                return response.status(401).json({ success: false, message: 'Token expired, generate a new one', data: null });
                 
             user.password = password;
             await user.save();
             
-            return response.status(200).send({ success: true, message: 'Service performed successfully', data: null });
+            return response.status(200).json({ success: true, message: 'Service performed successfully', data: null });
         } catch (err) {
-            return response.status(500).send({ success: false, message: 'Cannot reset password, try again', data: null });
+            return response.status(500).json({ success: false, message: 'Cannot reset password, try again', data: null });
         }
     },
 
     async logout (request, response) {
         try {
             if(!request.auth)
-                return response.status(401).send({ success: false, message: 'Unauthenticated user', data: null });
+                return response.status(401).json({ success: false, message: 'Unauthenticated user', data: null });
             
             let history = await AuthHistory.findOne({ token: request.token, user: request.userId });
     
             if(!history)
-                return response.status(400).send({ success: false, message: 'Token not registered', data: null });
+                return response.status(400).json({ success: false, message: 'Token not registered', data: null });
             
             history = await AuthHistory.findByIdAndUpdate( history._id, { status: false }, { new: true } );
     
-            return response.status(200).send({ success: true, message: 'Service performed successfully', data: history });
+            return response.status(200).json({ success: true, message: 'Service performed successfully', data: history });
         } catch (err) {
-            return response.status(500).send({ success: false, message: 'Logout error', data: null });
+            return response.status(500).json({ success: false, message: 'Logout error', data: null });
         }
     },
 
@@ -188,9 +188,9 @@ module.exports = {
         try {
             const history = await AuthHistory.find({ user: request.userId });
     
-            return response.status(200).send({ success: true, message: 'Service performed successfully', data: history });
+            return response.status(200).json({ success: true, message: 'Service performed successfully', data: history });
         } catch (err) {
-            return response.status(500).send({ success: false, message: 'Failed to query history', data: null });
+            return response.status(500).json({ success: false, message: 'Failed to query history', data: null });
         }
     },
 
@@ -198,18 +198,18 @@ module.exports = {
         const { token } = request.body;
         try {
             if(!request.auth)
-                return response.status(401).send({ success: false, message: 'Unauthenticated user', data: null });
+                return response.status(401).json({ success: false, message: 'Unauthenticated user', data: null });
             
             let history = await AuthHistory.findOne({ token, user: request.userId });
     
             if(!history)
-                return response.status(400).send({ success: false, message: 'Token not registered', data: null });
+                return response.status(400).json({ success: false, message: 'Token not registered', data: null });
             
             history = await AuthHistory.findByIdAndUpdate( history._id, { status: false }, { new: true } );
     
-            return response.status(200).send({ success: true, message: 'Service performed successfully', data: history });
+            return response.status(200).json({ success: true, message: 'Service performed successfully', data: history });
         } catch (err) {
-            return response.status(500).send({ success: false, message: 'Logout error', data: null });
+            return response.status(500).json({ success: false, message: 'Logout error', data: null });
         }
     },
 
