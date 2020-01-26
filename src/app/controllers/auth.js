@@ -40,7 +40,7 @@ module.exports = {
             user = await User.create({ ...request.body, confirmToken });
     
             // Envia email de boas vindas ao novo usuário
-            mailer.jsonMail({
+            mailer.sendMail({
                 to: email,
                 from: 'valdecir.junior@outlook.com',
                 template: 'auth/register',
@@ -126,7 +126,7 @@ module.exports = {
             user.passwordResetExpires = now;
             await user.save();
             
-            mailer.jsonMail({
+            mailer.sendMail({
                 to: email,
                 from: 'valdecir.junior@outlook.com',
                 template: 'auth/forgot_password',
