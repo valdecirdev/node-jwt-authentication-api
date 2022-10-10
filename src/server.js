@@ -14,6 +14,7 @@ app.use(cors());
 require('./app/routes/index')(app);
 
 const port = process.env.PORT || 3300;
+
 app.listen(port, function () {
     console.log('App listening on port %s', port);
 });

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "repository": "https://github.com/valdecirdev/node-jwt-authentication-api.git",
-  "author": "Valdecir <valdecir.silva9@fatec.sp.gov.br>",
+  "author": "Valdecir <valdecir.junior@outlook.com>",
   "license": "MIT",
   "scripts": {
     "start": "node src/server.js",
